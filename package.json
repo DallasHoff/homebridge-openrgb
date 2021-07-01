@@ -1,16 +1,24 @@
 {
   "private": true,
-  "displayName": "Plugin Name",
-  "name": "homebridge-plugin-name",
+  "displayName": "OpenRGB",
+  "name": "homebridge-openrgb",
   "version": "1.0.0",
-  "description": "A short description about what your plugin does.",
   "license": "Apache-2.0",
+  "description": "Control the RGB lighting of your PC components and peripherals with HomeKit.",
+  "keywords": [
+    "homebridge-plugin",
+    "openrgb",
+    "rgb",
+    "homekit"
+  ],
+  "author": "Dallas Hoffman",
+  "homepage": "https://github.com/DallasHoff/homebridge-openrgb",
   "repository": {
     "type": "git",
-    "url": "git://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "https://github.com/DallasHoff/homebridge-openrgb.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/DallasHoff/homebridge-openrgb/issues"
   },
   "engines": {
     "node": ">=10.17.0",
@@ -23,10 +31,9 @@
     "build": "rimraf ./dist && tsc",
     "prepublishOnly": "npm run lint && npm run build"
   },
-  "keywords": [
-    "homebridge-plugin"
-  ],
-  "dependencies": {},
+  "dependencies": {
+    "openrgb-sdk": "^0.4.3"
+  },
   "devDependencies": {
     "@types/node": "^14.14.31",
     "@typescript-eslint/eslint-plugin": "^4.16.1",

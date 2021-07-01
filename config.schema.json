@@ -1,16 +1,6 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "OpenRgbPlatform",
   "pluginType": "platform",
   "singular": true,
-  "schema": {
-    "type": "object",
-    "properties": {
-      "name": {
-        "title": "Name",
-        "type": "string",
-        "required": true,
-        "default": "Example Dynamic Platform"
-      }
-    }
-  }
+  "schema": {}
 }
