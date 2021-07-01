@@ -2,5 +2,40 @@
   "pluginAlias": "OpenRgbPlatform",
   "pluginType": "platform",
   "singular": true,
-  "schema": {}
+  "schema": {
+    "type": "object",
+    "properties": {
+      "servers": {
+        "title": "Computers Running the OpenRGB SDK Server",
+        "type": "array",
+        "items": {
+          "title": "Server",
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Name",
+              "type": "string",
+              "required": true,
+              "default": "My Computer",
+              "description": "A name for this server"
+            },
+            "host": {
+              "title": "Host",
+              "type": "string",
+              "required": true,
+              "default": "localhost",
+              "description": "The IP address (e.g. 10.0.0.2) or hostname (e.g. my-computer.local) that the OpenRGB SDK Server is running on"
+            },
+            "port": {
+              "title": "Port",
+              "type": "integer",
+              "required": true,
+              "default": 6742,
+              "description": "The port number that the OpenRGB SDK Server is set to run on"
+            }
+          }
+        }
+      }
+    }
+  }
 }
