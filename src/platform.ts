@@ -3,6 +3,9 @@ import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { OpenRgbPlatformAccessory } from './platformAccessory';
 
+import { rgbServer, rgbDevice } from './rgb';
+import { Client as OpenRGB } from 'openrgb-sdk';
+
 /**
  * HomebridgePlatform
  * This class is the main constructor for your plugin, this is where you should
@@ -45,33 +48,28 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * This is an example method showing how to register discovered accessories.
+   * Register discovered accessories.
    * Accessories must only be registered once, previously created accessories
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   discoverDevices() {
+    const servers: rgbServer[] = this.config.servers;
+    const foundDevices: rgbDevice[] = [];
 
-    // EXAMPLE ONLY
-    // A real plugin you would discover accessories from the local network, cloud services
-    // or a user-defined array in the platform config.
-    const exampleDevices = [
-      {
-        exampleUniqueId: 'ABCD',
-        exampleDisplayName: 'Bedroom',
-      },
-      {
-        exampleUniqueId: 'EFGH',
-        exampleDisplayName: 'Kitchen',
-      },
-    ];
+    // get all devices from all configured servers
+    servers.forEach(async server => {
+      await this.rgbConnection(server, async (client, devices) => {
+        devices.forEach(device => foundDevices.push(device));
+      });
+    });
 
     // loop over the discovered devices and register each one if it has not already been registered
-    for (const device of exampleDevices) {
+    for (const device of foundDevices) {
 
       // generate a unique id for the accessory this should be generated from
       // something globally unique, but constant, for example, the device serial
       // number or MAC address
-      const uuid = this.api.hap.uuid.generate(device.exampleUniqueId);
+      const uuid = this.api.hap.uuid.generate(device.serial);
 
       // see if an accessory with the same uuid has already been registered and restored from
       // the cached devices we stored in the `configureAccessory` method above
@@ -95,10 +93,10 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         // this.log.info('Removing existing accessory from cache:', existingAccessory.displayName);
       } else {
         // the accessory does not yet exist, so we need to create it
-        this.log.info('Adding new accessory:', device.exampleDisplayName);
+        this.log.info('Adding new accessory:', device.name);
 
         // create a new accessory
-        const accessory = new this.api.platformAccessory(device.exampleDisplayName, uuid);
+        const accessory = new this.api.platformAccessory(device.name, uuid);
 
         // store a copy of the device object in the `accessory.context`
         // the `context` property can be used to store any data about the accessory you may need
@@ -112,5 +110,37 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       }
     }
+  }
+
+  /**
+   * For opening connection to OpenRGB SDK server and closing it after performing
+   * the action passed as a function which receives the parameters:
+   * client (the connection object) and devices (array of RGB device info)
+   */
+  async rgbConnection(
+    server: rgbServer,
+    action: (client: any, devices: rgbDevice[]) => Promise<void>,
+  ): Promise<number> {
+    const { name: serverName, host: serverHost, port: serverPort } = server;
+    const client = new OpenRGB(serverName, serverPort, serverHost);
+
+    try {
+      await client.connect();
+    } catch (err) {
+      this.log.warn(`Unable to connect to OpenRGB SDK server at ${serverHost}:${serverPort}.`);
+      return 1;
+    }
+
+    const devices: rgbDevice[] = [];
+    const controllerCount = await client.getControllerCount();
+    for (let deviceId = 0; deviceId < controllerCount; deviceId++) {
+      const device: rgbDevice = await client.getControllerData(deviceId);
+      devices.push(device);
+    }
+
+    await action(client, devices);
+
+    await client.disconnect();
+    return 0;
   }
 }
