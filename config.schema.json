@@ -5,6 +5,12 @@
   "schema": {
     "type": "object",
     "properties": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "default": "OpenRGB",
+        "description": "A name to label this plugin"
+      },
       "servers": {
         "title": "Computers Running the OpenRGB SDK Server",
         "type": "array",
