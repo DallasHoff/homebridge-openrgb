@@ -29,10 +29,10 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
     // Dynamic Platform plugins should only register new accessories after this event was fired,
     // in order to ensure they weren't added to homebridge already. This event can also be used
     // to start discovery of new accessories.
-    this.api.on('didFinishLaunching', () => {
+    this.api.on('didFinishLaunching', async () => {
       log.debug('Executed didFinishLaunching callback');
       // run the method to discover / register your devices as accessories
-      this.discoverDevices();
+      await this.discoverDevices();
     });
   }
 
@@ -52,22 +52,25 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
    * Accessories must only be registered once, previously created accessories
    * must not be registered again to prevent "duplicate UUID" errors.
    */
-  discoverDevices() {
+  async discoverDevices() {
     const servers: rgbServer[] = this.config.servers;
     const foundDevices: rgbDevice[] = [];
     const deviceServers: rgbServer[] = [];
 
     // get all devices from all configured servers
-    servers.forEach(async server => {
-      await this.rgbConnection(server, async (client, devices) => {
+    for (const server of servers) {
+      this.log.debug('Discovering devices on server:', server.name);
+      await this.rgbConnection(server, (client, devices) => {
         devices.forEach(device => {
+          this.log.debug('Discovered device:', device.name);
           foundDevices.push(device);
           deviceServers.push(server);
         });
       });
-    });
+    }
 
     // loop over the discovered devices and register each one if it has not already been registered
+    this.log.debug('Registering devices');
     foundDevices.forEach((device, deviceIndex) => {
 
       // generate a unique id for the accessory this should be generated from
@@ -125,7 +128,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
    */
   async rgbConnection(
     server: rgbServer,
-    action: (client: any, devices: rgbDevice[]) => Promise<void>,
+    action: (client: any, devices: rgbDevice[]) => void | Promise<void>,
   ): Promise<number> {
     const { name: serverName, host: serverHost, port: serverPort } = server;
     const client = new OpenRGB(serverName, serverPort, serverHost);

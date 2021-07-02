@@ -117,8 +117,8 @@ export class OpenRgbPlatformAccessory {
   async getLedsHsl(): Promise<color> {
     let colorHsl: color = [0, 0, 0];
 
-    await this.platform.rgbConnection(this.accessory.context.server, async (client, devices) => {
-      const device = devices.find(d => d.serial === this.accessory.context.serial);
+    await this.platform.rgbConnection(this.accessory.context.server, (client, devices) => {
+      const device = devices.find(d => d.serial === this.accessory.context.device.serial);
       if (!device) {
         return;
       }
@@ -169,7 +169,7 @@ export class OpenRgbPlatformAccessory {
     const newColorRgb: color = ColorConvert.hsl.rgb(...newColorHsl);
 
     await this.platform.rgbConnection(this.accessory.context.server, async (client, devices) => {
-      const device = devices.find(d => d.serial === this.accessory.context.serial);
+      const device = devices.find(d => d.serial === this.accessory.context.device.serial);
       if (!device) {
         return;
       }
