@@ -55,16 +55,20 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
   discoverDevices() {
     const servers: rgbServer[] = this.config.servers;
     const foundDevices: rgbDevice[] = [];
+    const deviceServers: rgbServer[] = [];
 
     // get all devices from all configured servers
     servers.forEach(async server => {
       await this.rgbConnection(server, async (client, devices) => {
-        devices.forEach(device => foundDevices.push(device));
+        devices.forEach(device => {
+          foundDevices.push(device);
+          deviceServers.push(server);
+        });
       });
     });
 
     // loop over the discovered devices and register each one if it has not already been registered
-    for (const device of foundDevices) {
+    foundDevices.forEach((device, deviceIndex) => {
 
       // generate a unique id for the accessory this should be generated from
       // something globally unique, but constant, for example, the device serial
@@ -80,8 +84,9 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
 
         // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
-        // existingAccessory.context.device = device;
-        // this.api.updatePlatformAccessories([existingAccessory]);
+        existingAccessory.context.device = device;
+        existingAccessory.context.server = deviceServers[deviceIndex];
+        this.api.updatePlatformAccessories([existingAccessory]);
 
         // create the accessory handler for the restored accessory
         // this is imported from `platformAccessory.ts`
@@ -101,6 +106,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         // store a copy of the device object in the `accessory.context`
         // the `context` property can be used to store any data about the accessory you may need
         accessory.context.device = device;
+        accessory.context.server = deviceServers[deviceIndex];
 
         // create the accessory handler for the newly create accessory
         // this is imported from `platformAccessory.ts`
@@ -109,7 +115,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         // link the accessory to your platform
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       }
-    }
+    });
   }
 
   /**
