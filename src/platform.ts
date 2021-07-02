@@ -16,7 +16,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
 
   // this is used to track restored cached accessories
-  public readonly accessories: PlatformAccessory[] = [];
+  public accessories: PlatformAccessory[] = [];
 
   constructor(
     public readonly log: Logger,
@@ -55,6 +55,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
   async discoverDevices() {
     const servers: rgbServer[] = this.config.servers;
     const foundDevices: rgbDevice[] = [];
+    const foundUuids: string[] = [];
     const deviceServers: rgbServer[] = [];
 
     // get all devices from all configured servers
@@ -78,6 +79,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
       // something globally unique, but constant, for example, the device serial
       // number or MAC address
       const uuid = this.api.hap.uuid.generate(`${device.name}-${device.serial}-${device.location}`);
+      foundUuids.push(uuid);
 
       // see if an accessory with the same uuid has already been registered and restored from
       // the cached devices we stored in the `configureAccessory` method above
@@ -95,17 +97,13 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         // create the accessory handler for the restored accessory
         // this is imported from `platformAccessory.ts`
         new OpenRgbPlatformAccessory(this, existingAccessory);
-
-        // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-        // remove platform accessories when no longer present
-        // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
-        // this.log.info('Removing existing accessory from cache:', existingAccessory.displayName);
       } else {
         // the accessory does not yet exist, so we need to create it
         this.log.info('Adding new accessory:', device.name);
 
         // create a new accessory
         const accessory = new this.api.platformAccessory(device.name, uuid);
+        this.accessories.push(accessory);
 
         // store a copy of the device object in the `accessory.context`
         // the `context` property can be used to store any data about the accessory you may need
@@ -121,7 +119,30 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
       }
     });
 
-    // Set timeout to re-check for devices in case servers go offline and come back online
+    // remove devices if their server connected but did not report them
+    // or if the devices belong to a server that is no longer in the config
+    this.accessories = this.accessories.filter(accessory => {
+      const accServer: rgbServer = accessory.context.server;
+      const accUuid: string = accessory.UUID;
+
+      const serverMatch = (server: rgbServer) => (
+        server.name === accServer.name &&
+        server.host === accServer.host &&
+        server.port === accServer.port
+      );
+      const isServerInConfig = !!servers.find(serverMatch);
+      const isServerConnected = !!deviceServers.find(serverMatch);
+
+      if (!isServerInConfig || (isServerConnected && foundUuids.indexOf(accUuid) < 0)) {
+        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+        this.log.info('Removing accessory from cache:', accessory.displayName);
+        return false;
+      }
+
+      return true;
+    });
+
+    // set timeout to re-check for devices in case servers go offline and come back online
     // unless discoveryInterval is set to zero
     if (this.config.discoveryInterval !== 0) {
       setTimeout(async () => await this.discoverDevices(), (this.config.discoveryInterval || DEFAULT_DISCOVERY_INTERVAL) * 1000);
