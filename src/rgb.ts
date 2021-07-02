@@ -1,4 +1,4 @@
-// A color (e.g. an RGB or HSL color made up of its 3 channel values)
+// A color (e.g. an RGB or HSV color made up of its 3 channel values)
 export type color = [number, number, number];
 
 // A color object as used by the OpenRGB SDK

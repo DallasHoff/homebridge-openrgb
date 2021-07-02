@@ -79,43 +79,43 @@ export class OpenRgbPlatformAccessory {
    * throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
    */
   async getOn(): Promise<CharacteristicValue> {
-    const ledsHsl = await this.getLedsHsl();
-    const isOn = ledsHsl.reduce((a, b) => a + b) !== 0; // On unless all HSL values are 0
+    const ledsHsv = await this.getLedsHsv();
+    const isOn = ledsHsv.reduce((a, b) => a + b) !== 0; // On unless all HSV values are 0
     this.states.On = isOn;
     this.platform.log.debug('Get Characteristic On ->', isOn);
     return isOn;
   }
 
   async getHue(): Promise<CharacteristicValue> {
-    const ledsHsl = await this.getLedsHsl();
-    const hue = ledsHsl[0];
+    const ledsHsv = await this.getLedsHsv();
+    const hue = ledsHsv[0];
     this.states.Hue = hue;
     this.platform.log.debug('Get Characteristic Hue ->', hue);
     return hue;
   }
 
   async getSaturation(): Promise<CharacteristicValue> {
-    const ledsHsl = await this.getLedsHsl();
-    const saturation = ledsHsl[1];
+    const ledsHsv = await this.getLedsHsv();
+    const saturation = ledsHsv[1];
     this.states.Saturation = saturation;
     this.platform.log.debug('Get Characteristic Saturation ->', saturation);
     return saturation;
   }
 
   async getBrightness(): Promise<CharacteristicValue> {
-    const ledsHsl = await this.getLedsHsl();
-    const brightness = ledsHsl[2];
+    const ledsHsv = await this.getLedsHsv();
+    const brightness = ledsHsv[2];
     this.states.Brightness = brightness;
     this.platform.log.debug('Get Characteristic Brightness ->', brightness);
     return brightness;
   }
 
-  // Called to get the light color currently set on the device in HSL format.
+  // Called to get the light color currently set on the device in HSV format.
   // Since this can only return a single color, the function must get just the first LED's
   // color and make the assumption that the others match it.
   // If the computer/SDK server is off, the light will appear to be off, not unresponsive.
-  async getLedsHsl(): Promise<color> {
-    let colorHsl: color = [0, 0, 0];
+  async getLedsHsv(): Promise<color> {
+    let colorHsv: color = [0, 0, 0];
 
     await this.platform.rgbConnection(this.accessory.context.server, (client, devices) => {
       const device = devices.find(d => d.serial === this.accessory.context.device.serial);
@@ -123,11 +123,11 @@ export class OpenRgbPlatformAccessory {
         return;
       }
       const ledColor: openRgbColor = device.colors[0];
-      const ledHsl: color = ColorConvert.rgb.hsl(ledColor.red, ledColor.green, ledColor.blue);
-      colorHsl = ledHsl;
+      const ledHsv: color = ColorConvert.rgb.hsv(ledColor.red, ledColor.green, ledColor.blue);
+      colorHsv = ledHsv;
     });
 
-    return colorHsl;
+    return colorHsv;
   }
 
   /**
@@ -161,12 +161,12 @@ export class OpenRgbPlatformAccessory {
   // Called to send the new light colors to the device when the accessory state is changed in a set handler.
   // This sets all LED's on the device to the same color.
   async updateLeds() {
-    const newColorHsl: color = this.states.On === false ? [0, 0, 0] : [
+    const newColorHsv: color = this.states.On === false ? [0, 0, 0] : [
       this.states.Hue,
       this.states.Saturation,
       this.states.Brightness,
     ];
-    const newColorRgb: color = ColorConvert.hsl.rgb(...newColorHsl);
+    const newColorRgb: color = ColorConvert.hsv.rgb(...newColorHsv);
 
     await this.platform.rgbConnection(this.accessory.context.server, async (client, devices) => {
       const device = devices.find(d => d.serial === this.accessory.context.device.serial);
