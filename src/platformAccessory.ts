@@ -2,6 +2,9 @@ import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
 import { OpenRgbPlatform } from './platform';
 
+import { color, openRgbColor } from './rgb';
+import * as ColorConvert from 'color-convert';
+
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
@@ -10,13 +13,11 @@ import { OpenRgbPlatform } from './platform';
 export class OpenRgbPlatformAccessory {
   private service: Service;
 
-  /**
-   * These are just used to create a working example
-   * You should implement your own code to track the state of your accessory
-   */
-  private exampleStates = {
+  private states = {
     On: false,
-    Brightness: 100,
+    Hue: 0,
+    Saturation: 0,
+    Brightness: 0,
   };
 
   constructor(
@@ -26,80 +27,39 @@ export class OpenRgbPlatformAccessory {
 
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Default-Manufacturer')
-      .setCharacteristic(this.platform.Characteristic.Model, 'Default-Model')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial');
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, accessory.context.device.description.split(' ')[0])
+      .setCharacteristic(this.platform.Characteristic.Model, accessory.context.device.name)
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.serial);
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
-    // you can create multiple services for each accessory
     this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb);
 
     // set the service name, this is what is displayed as the default name on the Home app
-    // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.exampleDisplayName);
+    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
 
     // register handlers for the On/Off Characteristic
     this.service.getCharacteristic(this.platform.Characteristic.On)
-      .onSet(this.setOn.bind(this))                // SET - bind to the `setOn` method below
-      .onGet(this.getOn.bind(this));               // GET - bind to the `getOn` method below
+      .onSet(this.setOn.bind(this))
+      .onGet(this.getOn.bind(this));
+
+    // register handlers for the Hue Characteristic
+    this.service.getCharacteristic(this.platform.Characteristic.Hue)
+      .onSet(this.setHue.bind(this))
+      .onGet(this.getHue.bind(this));
+
+    // register handlers for the Saturation Characteristic
+    this.service.getCharacteristic(this.platform.Characteristic.Saturation)
+      .onSet(this.setSaturation.bind(this))
+      .onGet(this.getSaturation.bind(this));
 
     // register handlers for the Brightness Characteristic
     this.service.getCharacteristic(this.platform.Characteristic.Brightness)
-      .onSet(this.setBrightness.bind(this));       // SET - bind to the 'setBrightness` method below
+      .onSet(this.setBrightness.bind(this))
+      .onGet(this.getBrightness.bind(this));
 
-    /**
-     * Creating multiple services of the same type.
-     *
-     * To avoid "Cannot add a Service with the same UUID another Service without also defining a unique 'subtype' property." error,
-     * when creating multiple services of the same type, you need to use the following syntax to specify a name and subtype id:
-     * this.accessory.getService('NAME') || this.accessory.addService(this.platform.Service.Lightbulb, 'NAME', 'USER_DEFINED_SUBTYPE_ID');
-     *
-     * The USER_DEFINED_SUBTYPE must be unique to the platform accessory (if you platform exposes multiple accessories, each accessory
-     * can use the same sub type id.)
-     */
-
-    // Example: add two "motion sensor" services to the accessory
-    const motionSensorOneService = this.accessory.getService('Motion Sensor One Name') ||
-      this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor One Name', 'YourUniqueIdentifier-1');
-
-    const motionSensorTwoService = this.accessory.getService('Motion Sensor Two Name') ||
-      this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor Two Name', 'YourUniqueIdentifier-2');
-
-    /**
-     * Updating characteristics values asynchronously.
-     *
-     * Example showing how to update the state of a Characteristic asynchronously instead
-     * of using the `on('get')` handlers.
-     * Here we change update the motion sensor trigger states on and off every 10 seconds
-     * the `updateCharacteristic` method.
-     *
-     */
-    let motionDetected = false;
-    setInterval(() => {
-      // EXAMPLE - inverse the trigger
-      motionDetected = !motionDetected;
-
-      // push the new value to HomeKit
-      motionSensorOneService.updateCharacteristic(this.platform.Characteristic.MotionDetected, motionDetected);
-      motionSensorTwoService.updateCharacteristic(this.platform.Characteristic.MotionDetected, !motionDetected);
-
-      this.platform.log.debug('Triggering motionSensorOneService:', motionDetected);
-      this.platform.log.debug('Triggering motionSensorTwoService:', !motionDetected);
-    }, 10000);
-  }
-
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
-   */
-  async setOn(value: CharacteristicValue) {
-    // implement your own code to turn your device on/off
-    this.exampleStates.On = value as boolean;
-
-    this.platform.log.debug('Set Characteristic On ->', value);
   }
 
   /**
@@ -114,28 +74,113 @@ export class OpenRgbPlatformAccessory {
 
    * @example
    * this.service.updateCharacteristic(this.platform.Characteristic.On, true)
+
+   * If you need to return an error to show the device as "Not Responding" in the Home app:
+   * throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
    */
   async getOn(): Promise<CharacteristicValue> {
-    // implement your own code to check if the device is on
-    const isOn = this.exampleStates.On;
-
+    const ledsHsl = await this.getLedsHsl();
+    const isOn = ledsHsl.reduce((a, b) => a + b) !== 0; // On unless all HSL values are 0
+    this.states.On = isOn;
     this.platform.log.debug('Get Characteristic On ->', isOn);
-
-    // if you need to return an error to show the device as "Not Responding" in the Home app:
-    // throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
-
     return isOn;
+  }
+
+  async getHue(): Promise<CharacteristicValue> {
+    const ledsHsl = await this.getLedsHsl();
+    const hue = ledsHsl[0];
+    this.states.Hue = hue;
+    this.platform.log.debug('Get Characteristic Hue ->', hue);
+    return hue;
+  }
+
+  async getSaturation(): Promise<CharacteristicValue> {
+    const ledsHsl = await this.getLedsHsl();
+    const saturation = ledsHsl[1];
+    this.states.Saturation = saturation;
+    this.platform.log.debug('Get Characteristic Saturation ->', saturation);
+    return saturation;
+  }
+
+  async getBrightness(): Promise<CharacteristicValue> {
+    const ledsHsl = await this.getLedsHsl();
+    const brightness = ledsHsl[2];
+    this.states.Brightness = brightness;
+    this.platform.log.debug('Get Characteristic Brightness ->', brightness);
+    return brightness;
+  }
+
+  // Called to get the light color currently set on the device in HSL format.
+  // Since this can only return a single color, the function must get just the first LED's
+  // color and make the assumption that the others match it.
+  // If the computer/SDK server is off, the light will appear to be off, not unresponsive.
+  async getLedsHsl(): Promise<color> {
+    let colorHsl: color = [0, 0, 0];
+
+    await this.platform.rgbConnection(this.accessory.context.server, async (client, devices) => {
+      const device = devices.find(d => d.serial === this.accessory.context.serial);
+      if (!device) {
+        return;
+      }
+      const ledColor: openRgbColor = device.colors[0];
+      const ledHsl: color = ColorConvert.rgb.hsl(ledColor.red, ledColor.green, ledColor.blue);
+      colorHsl = ledHsl;
+    });
+
+    return colorHsl;
   }
 
   /**
    * Handle "SET" requests from HomeKit
    * These are sent when the user changes the state of an accessory, for example, changing the Brightness
    */
-  async setBrightness(value: CharacteristicValue) {
-    // implement your own code to set the brightness
-    this.exampleStates.Brightness = value as number;
+  async setOn(value: CharacteristicValue) {
+    this.states.On = value as boolean;
+    await this.updateLeds();
+    this.platform.log.debug('Set Characteristic On ->', value);
+  }
 
+  async setHue(value: CharacteristicValue) {
+    this.states.Hue = value as number;
+    await this.updateLeds();
+    this.platform.log.debug('Set Characteristic Hue -> ', value);
+  }
+
+  async setSaturation(value: CharacteristicValue) {
+    this.states.Saturation = value as number;
+    await this.updateLeds();
+    this.platform.log.debug('Set Characteristic Saturation -> ', value);
+  }
+
+  async setBrightness(value: CharacteristicValue) {
+    this.states.Brightness = value as number;
+    await this.updateLeds();
     this.platform.log.debug('Set Characteristic Brightness -> ', value);
+  }
+
+  // Called to send the new light colors to the device when the accessory state is changed in a set handler.
+  // This sets all LED's on the device to the same color.
+  async updateLeds() {
+    const newColorHsl: color = this.states.On === false ? [0, 0, 0] : [
+      this.states.Hue,
+      this.states.Saturation,
+      this.states.Brightness,
+    ];
+    const newColorRgb: color = ColorConvert.hsl.rgb(...newColorHsl);
+
+    await this.platform.rgbConnection(this.accessory.context.server, async (client, devices) => {
+      const device = devices.find(d => d.serial === this.accessory.context.serial);
+      if (!device) {
+        return;
+      }
+      const ledColor: openRgbColor = {
+        red: newColorRgb[0],
+        green: newColorRgb[1],
+        blue: newColorRgb[2],
+      };
+      const ledColors: openRgbColor[] = Array(device.colors.length).fill(ledColor);
+      await client.updateLeds(device.deviceId, ledColors);
+    });
   }
 
 }
