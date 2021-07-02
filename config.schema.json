@@ -6,10 +6,18 @@
     "type": "object",
     "properties": {
       "name": {
+        "title": "Name",
         "type": "string",
         "required": true,
         "default": "OpenRGB",
         "description": "A name to label this plugin"
+      },
+      "discoveryInterval": {
+        "title": "Discovery Interval",
+        "type": "integer",
+        "required": true,
+        "default": 60,
+        "description": "How often (in seconds) to check if new devices are available to connect to"
       },
       "servers": {
         "title": "Computers Running the OpenRGB SDK Server",

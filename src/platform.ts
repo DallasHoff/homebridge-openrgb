@@ -1,6 +1,6 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
-import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
+import { PLATFORM_NAME, PLUGIN_NAME, DEFAULT_DISCOVERY_INTERVAL } from './settings';
 import { OpenRgbPlatformAccessory } from './platformAccessory';
 
 import { rgbServer, rgbDevice } from './rgb';
@@ -120,6 +120,12 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       }
     });
+
+    // Set timeout to re-check for devices in case servers go offline and come back online
+    // unless discoveryInterval is set to zero
+    if (this.config.discoveryInterval !== 0) {
+      setTimeout(async () => await this.discoverDevices(), (this.config.discoveryInterval || DEFAULT_DISCOVERY_INTERVAL) * 1000);
+    }
   }
 
   /**
