@@ -72,11 +72,12 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
     // loop over the discovered devices and register each one if it has not already been registered
     this.log.debug('Registering devices');
     foundDevices.forEach((device, deviceIndex) => {
+      const deviceServer: rgbServer = deviceServers[deviceIndex];
 
       // generate a unique id for the accessory this should be generated from
       // something globally unique, but constant, for example, the device serial
       // number or MAC address
-      const uuid = this.api.hap.uuid.generate(device.serial);
+      const uuid = this.api.hap.uuid.generate(`${device.name}-${device.serial}-${device.location}`);
 
       // see if an accessory with the same uuid has already been registered and restored from
       // the cached devices we stored in the `configureAccessory` method above
@@ -88,7 +89,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
 
         // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
         existingAccessory.context.device = device;
-        existingAccessory.context.server = deviceServers[deviceIndex];
+        existingAccessory.context.server = deviceServer;
         this.api.updatePlatformAccessories([existingAccessory]);
 
         // create the accessory handler for the restored accessory
@@ -109,7 +110,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         // store a copy of the device object in the `accessory.context`
         // the `context` property can be used to store any data about the accessory you may need
         accessory.context.device = device;
-        accessory.context.server = deviceServers[deviceIndex];
+        accessory.context.server = deviceServer;
 
         // create the accessory handler for the newly create accessory
         // this is imported from `platformAccessory.ts`
