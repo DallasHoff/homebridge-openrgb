@@ -8,7 +8,7 @@ import { Client as OpenRGB } from 'openrgb-sdk';
 
 /**
  * HomebridgePlatform
- * This class is the main constructor for your plugin, this is where you should
+ * This class is the main constructor for the plugin, this is where it should
  * parse the user config and discover/register accessories with Homebridge.
  */
 export class OpenRgbPlatform implements DynamicPlatformPlugin {
@@ -30,17 +30,17 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
 
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
     // Dynamic Platform plugins should only register new accessories after this event was fired,
-    // in order to ensure they weren't added to homebridge already. This event can also be used
+    // in order to ensure they weren't added to Homebridge already. This event can also be used
     // to start discovery of new accessories.
     this.api.on('didFinishLaunching', async () => {
       log.debug('Executed didFinishLaunching callback');
-      // run the method to discover / register your devices as accessories
+      // discover/register devices as accessories
       await this.discoverDevices();
     });
   }
 
   /**
-   * This function is invoked when homebridge restores cached accessories from disk at startup.
+   * This function is invoked when Homebridge restores cached accessories from disk at startup.
    * It should be used to setup event handlers for characteristics and update respective values.
    */
   configureAccessory(accessory: PlatformAccessory) {
@@ -56,10 +56,14 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   async discoverDevices() {
+    // OpenRGB SDK servers listed in config
     const servers: rgbServer[] = this.config.servers;
+    // servers that connected successfully; use index to match to a found device
+    const foundServers: rgbServer[] = [];
+    // RGB devices reported by found servers
     const foundDevices: rgbDevice[] = [];
+    // UUID's of found devices
     const foundUuids: string[] = [];
-    const deviceServers: rgbServer[] = [];
 
     // get all devices from all configured servers
     for (const server of servers) {
@@ -68,7 +72,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         devices.forEach(device => {
           this.log.debug('Discovered device:', device.name);
           foundDevices.push(device);
-          deviceServers.push(server);
+          foundServers.push(server);
         });
       });
     }
@@ -76,9 +80,10 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
     // loop over the discovered devices and register each one if it has not already been registered
     this.log.debug('Registering devices');
     foundDevices.forEach((device, deviceIndex) => {
-      const deviceServer: rgbServer = deviceServers[deviceIndex];
+      // server this device belongs to
+      const deviceServer: rgbServer = foundServers[deviceIndex];
 
-      // generate a unique id for the accessory this should be generated from
+      // generate a unique id for the accessory. this should be generated from
       // something globally unique, but constant, for example, the device serial
       // number or MAC address
       const uuid = this.api.hap.uuid.generate(`${device.name}-${device.serial}-${device.location}`);
@@ -92,7 +97,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         // the accessory already exists
         this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
 
-        // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
+        // update the accessory.context
         existingAccessory.context.device = device;
         existingAccessory.context.server = deviceServer;
         this.api.updatePlatformAccessories([existingAccessory]);
@@ -111,16 +116,18 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         const accessory = new this.api.platformAccessory(device.name, uuid);
         this.accessories.push(accessory);
 
-        // store a copy of the device object in the `accessory.context`
-        // the `context` property can be used to store any data about the accessory you may need
+        // the `context` property can be used to store any data about the accessory
         accessory.context.device = device;
         accessory.context.server = deviceServer;
 
-        // create the accessory handler for the newly create accessory
-        // this is imported from `platformAccessory.ts`
-        new OpenRgbPlatformAccessory(this, accessory);
+        // create the accessory handler for the newly created accessory
+        // this class is imported from `platformAccessory.ts`
+        if (this.handlerUuids.indexOf(uuid) < 0) {
+          this.handlerUuids.push(uuid);
+          new OpenRgbPlatformAccessory(this, accessory);
+        }
 
-        // link the accessory to your platform
+        // link the accessory to the platform
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       }
     });
@@ -137,7 +144,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         server.port === accServer.port
       );
       const isServerInConfig = !!servers.find(serverMatch);
-      const isServerConnected = !!deviceServers.find(serverMatch);
+      const isServerConnected = !!foundServers.find(serverMatch);
 
       if (!isServerInConfig || (isServerConnected && foundUuids.indexOf(accUuid) < 0)) {
         this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

@@ -7,7 +7,7 @@ import * as ColorConvert from 'color-convert';
 
 /**
  * Platform Accessory
- * An instance of this class is created for each accessory your platform registers
+ * An instance of this class is created for each accessory the platform registers
  * Each accessory may expose multiple services of different service types.
  */
 export class OpenRgbPlatformAccessory {
@@ -27,7 +27,11 @@ export class OpenRgbPlatformAccessory {
 
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, accessory.context.device.description.split(' ')[0])
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, (
+        accessory.context.device.description &&
+        accessory.context.device.description.split(' ') &&
+        accessory.context.device.description.split(' ')[0]
+      ))
       .setCharacteristic(this.platform.Characteristic.Model, accessory.context.device.name)
       .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.serial);
 
@@ -69,7 +73,7 @@ export class OpenRgbPlatformAccessory {
    * GET requests should return as fast as possbile. A long delay here will result in
    * HomeKit being unresponsive and a bad user experience in general.
    *
-   * If your device takes time to respond you should update the status of your device
+   * If a device takes time to respond, you should update the status of the device
    * asynchronously instead using the `updateCharacteristic` method instead.
 
    * @example

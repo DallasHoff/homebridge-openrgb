@@ -4,7 +4,7 @@
 export const PLATFORM_NAME = 'OpenRgbPlatform';
 
 /**
- * This must match the name of your plugin as defined the package.json
+ * This must match the name of the plugin as defined the package.json
  */
 export const PLUGIN_NAME = 'homebridge-openrgb';
 

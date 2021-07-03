@@ -13,11 +13,11 @@ export interface rgbDevice {
     deviceId: number;
     type: number;
     name: string;
-    description: string;
-    version: string;
-    serial: string;
+    description?: string;
+    version?: string;
+    serial?: string;
     location: string;
-    activeMode: number;
+    activeMode?: number;
     leds: [
         {
             name: string;
@@ -25,8 +25,8 @@ export interface rgbDevice {
         }
     ];
     colors: openRgbColor[];
-    modes: any[];
-    zones: any[];
+    modes?: any[];
+    zones?: any[];
     [key: string]: any;
 }
 
