@@ -18,6 +18,9 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
   // this is used to track restored cached accessories
   public accessories: PlatformAccessory[] = [];
 
+  // track which accessories have registered handlers
+  public handlerUuids: string[] = [];
+
   constructor(
     public readonly log: Logger,
     public readonly config: PlatformConfig,
@@ -94,9 +97,12 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         existingAccessory.context.server = deviceServer;
         this.api.updatePlatformAccessories([existingAccessory]);
 
-        // create the accessory handler for the restored accessory
-        // this is imported from `platformAccessory.ts`
-        new OpenRgbPlatformAccessory(this, existingAccessory);
+        // create the accessory handler for the restored accessory if it does not have one yet
+        // this class is imported from `platformAccessory.ts`
+        if (this.handlerUuids.indexOf(uuid) < 0) {
+          this.handlerUuids.push(uuid);
+          new OpenRgbPlatformAccessory(this, existingAccessory);
+        }
       } else {
         // the accessory does not yet exist, so we need to create it
         this.log.info('Adding new accessory:', device.name);
