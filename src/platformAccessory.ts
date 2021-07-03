@@ -138,27 +138,32 @@ export class OpenRgbPlatformAccessory {
    * Handle "SET" requests from HomeKit
    * These are sent when the user changes the state of an accessory, for example, changing the Brightness
    */
+
+  // Send updates after this delay (milliseconds) to mitigate race condition from
+  // HomeKit setting multiple characteristics at the same time
+  updateDelay = 50;
+
   async setOn(value: CharacteristicValue) {
     this.states.On = value as boolean;
-    await this.updateLeds();
+    setTimeout(async () => await this.updateLeds(), this.updateDelay);
     this.platform.log.debug('Set Characteristic On ->', value);
   }
 
   async setHue(value: CharacteristicValue) {
     this.states.Hue = value as number;
-    await this.updateLeds();
+    setTimeout(async () => await this.updateLeds(), this.updateDelay);
     this.platform.log.debug('Set Characteristic Hue -> ', value);
   }
 
   async setSaturation(value: CharacteristicValue) {
     this.states.Saturation = value as number;
-    await this.updateLeds();
+    setTimeout(async () => await this.updateLeds(), this.updateDelay);
     this.platform.log.debug('Set Characteristic Saturation -> ', value);
   }
 
   async setBrightness(value: CharacteristicValue) {
     this.states.Brightness = value as number;
-    await this.updateLeds();
+    setTimeout(async () => await this.updateLeds(), this.updateDelay);
     this.platform.log.debug('Set Characteristic Brightness -> ', value);
   }
 
