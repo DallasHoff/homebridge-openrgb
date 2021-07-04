@@ -34,8 +34,39 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
     // to start discovery of new accessories.
     this.api.on('didFinishLaunching', async () => {
       log.debug('Executed didFinishLaunching callback');
+
+      // check if plugin configuration is valid
+      let isConfigValid = true;
+
+      // check servers
+      if (Array.isArray(this.config.servers)) {
+        for (const server of this.config.servers) {
+          const isValidServer = (
+            server.name &&
+            server.host &&
+            server.port &&
+            Number.isInteger(server.port)
+          );
+          if (!isValidServer) {
+            this.log.warn('Invalid configuration for server:', server);
+            isConfigValid = false;
+          }
+        }
+      } else {
+        this.log.warn('No servers were added to the plugin configuration');
+        isConfigValid = false;
+      }
+
+      // check discoveryInterval
+      if (!Number.isInteger(this.config.discoveryInterval)) {
+        this.log.warn('discoveryInterval must be set to an integer value');
+        isConfigValid = false;
+      }
+
       // discover/register devices as accessories
-      await this.discoverDevices();
+      if (isConfigValid === true) {
+        await this.discoverDevices();
+      }
     });
   }
 

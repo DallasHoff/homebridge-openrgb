@@ -27,11 +27,7 @@ export class OpenRgbPlatformAccessory {
 
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, (
-        accessory.context.device.description &&
-        accessory.context.device.description.split(' ') &&
-        accessory.context.device.description.split(' ')[0]
-      ))
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, accessory.context.device?.description?.split?.(' ')?.[0])
       .setCharacteristic(this.platform.Characteristic.Model, accessory.context.device.name)
       .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.serial);
 
