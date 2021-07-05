@@ -1,6 +1,6 @@
 # OpenRGB Homebridge Plugin
-![npm](https://img.shields.io/npm/v/homebridge-openrgb)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/DallasHoff/homebridge-openrgb/Build%20and%20Lint)
+[![npm](https://img.shields.io/npm/v/homebridge-openrgb)](https://www.npmjs.com/package/homebridge-openrgb)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/DallasHoff/homebridge-openrgb/Build%20and%20Lint)](https://github.com/DallasHoff/homebridge-openrgb/actions/workflows/build.yml)
 
 ![](https://repository-images.githubusercontent.com/381840795/6d85ba00-dc10-11eb-8bac-32f841dd423b)
 
@@ -36,6 +36,8 @@ Configure the plugin so that it knows where to connect to your PC(s) running the
     * `name` (string) - A name for this server
     * `host` (string) - The IP address (e.g. 10.0.0.2) or hostname (e.g. my-computer.local) that the OpenRGB SDK Server is running on
     * `port` (integer) - The port number that the OpenRGB SDK Server is set to run on. OpenRGB defaults to using port 6742
+
+Typically, a computer's IP address will change periodically, so I recommend using your PC's hostname to configure this plugin's `host` field. On Windows, you can run the `hostname` command from the command line to view your PC's name. Your hostname will then be that name, lowercase, with `.local` appended to the end. Alternatively, you could configure your router to reserve a specific IP address for your PC and use that in the `host` field.
 
 **Example Configuration:**
 
