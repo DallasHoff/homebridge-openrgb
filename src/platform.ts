@@ -1,6 +1,6 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
-import { PLATFORM_NAME, PLUGIN_NAME, DEFAULT_DISCOVERY_INTERVAL } from './settings';
+import { PLATFORM_NAME, PLUGIN_NAME, DEFAULT_DISCOVERY_INTERVAL, SERVER_CONNECTION_TIMEOUT } from './settings';
 import { OpenRgbPlatformAccessory } from './platformAccessory';
 
 import { rgbServer, rgbDevice } from './rgb';
@@ -205,23 +205,30 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
     const { name: serverName, host: serverHost, port: serverPort } = server;
     const client = new OpenRGB(serverName, serverPort, serverHost);
 
+    // Connect to the server with a timeout
+    const timeout = async () => await new Promise((resolve, reject) => setTimeout(() => reject(), SERVER_CONNECTION_TIMEOUT));
+
     try {
-      await client.connect();
+      await Promise.race([client.connect(), timeout()]);
     } catch (err) {
       this.log.warn(`Unable to connect to OpenRGB SDK server at ${serverHost}:${serverPort}.`);
       return 1;
     }
 
+    // Build array of device information
     const devices: rgbDevice[] = [];
     const controllerCount = await client.getControllerCount();
+
     for (let deviceId = 0; deviceId < controllerCount; deviceId++) {
       const device: rgbDevice = await client.getControllerData(deviceId);
       devices.push(device);
     }
 
+    // Perform supplied action then disconnect
     await action(client, devices);
 
     await client.disconnect();
+
     return 0;
   }
 }

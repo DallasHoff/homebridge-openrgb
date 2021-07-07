@@ -12,3 +12,8 @@ export const PLUGIN_NAME = 'homebridge-openrgb';
  * Fallback value to use if config.discoveryInterval is left empty
  */
 export const DEFAULT_DISCOVERY_INTERVAL = 60;
+
+/**
+ * Timeout (in milliseconds) to use when attempting to connect to a server
+ */
+export const SERVER_CONNECTION_TIMEOUT = 3000;
