@@ -141,31 +141,33 @@ export class OpenRgbPlatformAccessory {
 
   async setOn(value: CharacteristicValue) {
     this.states.On = value as boolean;
-    setTimeout(async () => await this.updateLeds(), this.updateDelay);
+    await this.updateLeds();
     this.platform.log.debug('Set Characteristic On ->', value);
   }
 
   async setHue(value: CharacteristicValue) {
     this.states.Hue = value as number;
-    setTimeout(async () => await this.updateLeds(), this.updateDelay);
+    await this.updateLeds();
     this.platform.log.debug('Set Characteristic Hue -> ', value);
   }
 
   async setSaturation(value: CharacteristicValue) {
     this.states.Saturation = value as number;
-    setTimeout(async () => await this.updateLeds(), this.updateDelay);
+    await this.updateLeds();
     this.platform.log.debug('Set Characteristic Saturation -> ', value);
   }
 
   async setBrightness(value: CharacteristicValue) {
     this.states.Brightness = value as number;
-    setTimeout(async () => await this.updateLeds(), this.updateDelay);
+    await this.updateLeds();
     this.platform.log.debug('Set Characteristic Brightness -> ', value);
   }
 
   // Called to send the new light colors to the device when the accessory state is changed in a set handler.
   // This sets all LED's on the device to the same color.
   async updateLeds() {
+    await new Promise(resolve => setTimeout(() => resolve(0), this.updateDelay));
+
     const newColorHsv: color = this.states.On === false ? [0, 0, 0] : [
       this.states.Hue,
       this.states.Saturation,
