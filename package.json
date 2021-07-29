@@ -44,5 +44,9 @@
     "rimraf": "^3.0.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.2"
+  },
+  "funding": {
+    "type": "paypal",
+    "url": "https://www.paypal.com/biz/fund?id=U3ZNM2Q26WJY8"
   }
 }

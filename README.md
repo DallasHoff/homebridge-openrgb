@@ -1,6 +1,8 @@
 # OpenRGB Homebridge Plugin
+[![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
 [![npm](https://img.shields.io/npm/v/homebridge-openrgb)](https://www.npmjs.com/package/homebridge-openrgb)
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/DallasHoff/homebridge-openrgb/Build%20and%20Lint)](https://github.com/DallasHoff/homebridge-openrgb/actions/workflows/build.yml)
+[![Donate](https://img.shields.io/badge/❤-Donate-d61364)](https://www.paypal.com/biz/fund?id=U3ZNM2Q26WJY8)
 
 ![](https://repository-images.githubusercontent.com/381840795/6d85ba00-dc10-11eb-8bac-32f841dd423b)
 
