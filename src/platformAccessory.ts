@@ -118,7 +118,7 @@ export class OpenRgbPlatformAccessory {
     let colorHsv: color = [0, 0, 0];
 
     await this.platform.rgbConnection(this.accessory.context.server, (client, devices) => {
-      const device = devices.find(d => d.serial === this.accessory.context.device.serial);
+      const device = devices.find(d => this.platform.genUuid(d) === this.accessory.UUID);
       if (!device) {
         return;
       }
@@ -176,7 +176,7 @@ export class OpenRgbPlatformAccessory {
     const newColorRgb: color = ColorConvert.hsv.rgb(...newColorHsv);
 
     await this.platform.rgbConnection(this.accessory.context.server, async (client, devices) => {
-      const device = devices.find(d => d.serial === this.accessory.context.device.serial);
+      const device = devices.find(d => this.platform.genUuid(d) === this.accessory.UUID);
       if (!device) {
         return;
       }

@@ -114,10 +114,8 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
       // server this device belongs to
       const deviceServer: rgbServer = foundServers[deviceIndex];
 
-      // generate a unique id for the accessory. this should be generated from
-      // something globally unique, but constant, for example, the device serial
-      // number or MAC address
-      const uuid = this.api.hap.uuid.generate(`${device.name}-${device.serial}-${device.location}`);
+      // unique ID for the device
+      const uuid = this.genUuid(device);
       foundUuids.push(uuid);
 
       // see if an accessory with the same uuid has already been registered and restored from
@@ -191,6 +189,13 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
     if (this.config.discoveryInterval !== 0) {
       setTimeout(async () => await this.discoverDevices(), (this.config.discoveryInterval || DEFAULT_DISCOVERY_INTERVAL) * 1000);
     }
+  }
+
+  /**
+   * For generating a UUID for an RGB device from a globally unique but constant set of inputs
+   */
+  genUuid(device: rgbDevice): string {
+    return this.api.hap.uuid.generate(`${device.name}-${device.serial}-${device.location}`);
   }
 
   /**
