@@ -34,6 +34,7 @@ Configure the plugin so that it knows where to connect to your PC(s) running the
 * `platform` (string) - Tells Homebridge to use this plugin. Must be set to `OpenRgbPlatform`
 * `name` (string) - A name to label this plugin
 * `discoveryInterval` (integer) - How often (in seconds) to check if new devices are available to connect to. Defaults to 60 seconds
+* `preserveDisconnected` (boolean) - Set this to `true` to have the plugin keep devices that are disconnected from their server. By default, devices that are not connected when their server is queried are removed from HomeKit, which may mess up your scenes if you have devices such as peripherals which are not always connected to your PC
 * `servers` (array) - Each object represents a computer running the OpenRGB SDK server that this plugin should attempt to connect to
     * `name` (string) - A name for this server
     * `host` (string) - The IP address (e.g. 10.0.0.2) or hostname (e.g. my-computer.local) that the OpenRGB SDK Server is running on
@@ -49,6 +50,7 @@ Typically, a computer's IP address will change periodically, so I recommend usin
                 "platform": "OpenRgbPlatform",
                 "name": "OpenRGB",
                 "discoveryInterval": 60,
+                "preserveDisconnected": false,
                 "servers": [
                     {
                         "name": "John's Computer",

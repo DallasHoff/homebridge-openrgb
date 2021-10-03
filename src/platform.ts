@@ -162,6 +162,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
     });
 
     // remove devices if their server connected but did not report them
+    // (unless preserveDisconnected option is set)
     // or if the devices belong to a server that is no longer in the config
     this.accessories = this.accessories.filter(accessory => {
       const accServer: rgbServer = accessory.context.server;
@@ -175,7 +176,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
       const isServerInConfig = !!servers.find(serverMatch);
       const isServerConnected = !!foundServers.find(serverMatch);
 
-      if (!isServerInConfig || (isServerConnected && foundUuids.indexOf(accUuid) < 0)) {
+      if (!isServerInConfig || (isServerConnected && this.config.preserveDisconnected !== true && foundUuids.indexOf(accUuid) < 0)) {
         this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
         this.log.info('Removing accessory from cache:', accessory.displayName);
         return false;
