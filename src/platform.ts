@@ -217,17 +217,27 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
     try {
       await Promise.race([client.connect(), timeout()]);
     } catch (err) {
-      this.log.warn(`Unable to connect to OpenRGB SDK server at ${serverHost}:${serverPort}.`);
+      this.log.warn(`Unable to connect to OpenRGB SDK server at ${serverHost}:${serverPort}`);
       return 1;
     }
 
     // Build array of device information
     const devices: rgbDevice[] = [];
-    const controllerCount = await client.getControllerCount();
+    let controllerCount = 0;
+
+    try {
+      controllerCount = await client.getControllerCount();
+    } catch (err) {
+      this.log.warn(`Unable to enumerate RGB devices on OpenRGB SDK server at ${serverHost}:${serverPort}`);
+    }
 
     for (let deviceId = 0; deviceId < controllerCount; deviceId++) {
-      const device: rgbDevice = await client.getControllerData(deviceId);
-      devices.push(device);
+      try {
+        const device: rgbDevice = await client.getControllerData(deviceId);
+        devices.push(device);
+      } catch (err) {
+        this.log.warn(`Unable to get status of RGB device ${deviceId} on OpenRGB SDK server at ${serverHost}:${serverPort}`);
+      }
     }
 
     // Perform supplied action then disconnect

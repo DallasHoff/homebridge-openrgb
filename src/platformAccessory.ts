@@ -180,13 +180,19 @@ export class OpenRgbPlatformAccessory {
       if (!device) {
         return;
       }
+
       const ledColor: openRgbColor = {
         red: newColorRgb[0],
         green: newColorRgb[1],
         blue: newColorRgb[2],
       };
       const ledColors: openRgbColor[] = Array(device.colors.length).fill(ledColor);
-      await client.updateLeds(device.deviceId, ledColors);
+
+      try {
+        await client.updateLeds(device.deviceId, ledColors);
+      } catch (err) {
+        this.platform.log.warn(`Failed to set light color on device: ${device.name}`);
+      }
     });
   }
 
