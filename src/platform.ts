@@ -124,7 +124,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
 
       if (existingAccessory) {
         // the accessory already exists
-        this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+        this.log.debug('Restoring existing accessory from cache:', existingAccessory.displayName);
 
         // update the accessory.context
         existingAccessory.context.device = device;
