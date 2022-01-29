@@ -33,36 +33,38 @@ Configure the plugin so that it knows where to connect to your PC(s) running the
 **Configuration Fields:**
 * `platform` (string) - Tells Homebridge to use this plugin. Must be set to `OpenRgbPlatform`
 * `name` (string) - A name to label this plugin
-* `discoveryInterval` (integer) - How often (in seconds) to check if new devices are available to connect to. Defaults to 60 seconds
-* `preserveDisconnected` (boolean) - Set this to `true` to have the plugin keep devices that are disconnected from their server. By default, devices that are not connected when their server is queried are removed from HomeKit, which may mess up your scenes if you have devices such as peripherals which are not always connected to your PC
 * `servers` (array) - Each object represents a computer running the OpenRGB SDK server that this plugin should attempt to connect to
     * `name` (string) - A name for this server
     * `host` (string) - The IP address (e.g. 10.0.0.2) or hostname (e.g. my-computer.local) that the OpenRGB SDK Server is running on
     * `port` (integer) - The port number that the OpenRGB SDK Server is set to run on. OpenRGB defaults to using port 6742
+* `discoveryInterval` (integer) - How often (in seconds) to check if new devices are available to connect to. Defaults to 60 seconds
+* `preserveDisconnected` (boolean) - Set this to `true` to have the plugin keep devices that are disconnected from their server. By default, devices that are not connected when their server is queried are removed from HomeKit, which may mess up your scenes if you have devices such as peripherals which are not always connected to your PC
+* `suppressConnectionErrors` (boolean) - Set this to `true` to hide log messages about errors connecting to your PC
 
 Typically, a computer's IP address will change periodically, so I recommend using your PC's hostname to configure this plugin's `host` field. On Windows, you can run the `hostname` command from the command line to view your PC's name. Your hostname will then be that name, lowercase, with `.local` appended to the end. Alternatively, you could configure your router to reserve a specific IP address for your PC and use that in the `host` field.
 
 **Example Configuration:**
 
     {
-        "platforms": [
+      "platforms": [
+        {
+          "platform": "OpenRgbPlatform",
+          "name": "OpenRGB",
+          "servers": [
             {
-                "platform": "OpenRgbPlatform",
-                "name": "OpenRGB",
-                "discoveryInterval": 60,
-                "preserveDisconnected": false,
-                "servers": [
-                    {
-                        "name": "John's Computer",
-                        "host": "johns-computer.local",
-                        "port": 6742
-                    },
-                    {
-                        "name": "Jane's Computer",
-                        "host": "janes-computer.local",
-                        "port": 6742
-                    }
-                ]
+              "name": "John's Computer",
+              "host": "johns-computer.local",
+              "port": 6742
+            },
+            {
+              "name": "Jane's Computer",
+              "host": "janes-computer.local",
+              "port": 6742
             }
-        ]
+          ],
+          "discoveryInterval": 60,
+          "preserveDisconnected": false,
+          "suppressConnectionErrors": false
+        }
+      ]
     }

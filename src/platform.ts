@@ -217,7 +217,8 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
     try {
       await Promise.race([client.connect(), timeout()]);
     } catch (err) {
-      this.log.warn(`Unable to connect to OpenRGB SDK server at ${serverHost}:${serverPort}`);
+      const logType = this.config.suppressConnectionErrors === true ? 'debug' : 'warn';
+      this.log[logType](`Unable to connect to OpenRGB SDK server at ${serverHost}:${serverPort}`);
       return 1;
     }
 

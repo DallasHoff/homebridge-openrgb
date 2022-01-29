@@ -12,20 +12,6 @@
         "default": "OpenRGB",
         "description": "A name to label this plugin"
       },
-      "discoveryInterval": {
-        "title": "Discovery Interval",
-        "type": "integer",
-        "required": true,
-        "default": 60,
-        "description": "How often (in seconds) to check if new devices are available to connect to"
-      },
-      "preserveDisconnected": {
-        "title": "Preserve Disconnected Devices",
-        "type": "boolean",
-        "required": false,
-        "default": false,
-        "description": "Enable this to have the plugin keep devices that are disconnected from their server. By default, devices that are not connected when their server is queried are removed from HomeKit, which may mess up your scenes if you have devices such as peripherals which are not always connected to your PC"
-      },
       "servers": {
         "title": "Computers Running the OpenRGB SDK Server",
         "type": "array",
@@ -56,6 +42,27 @@
             }
           }
         }
+      },
+      "discoveryInterval": {
+        "title": "Discovery Interval",
+        "type": "integer",
+        "required": true,
+        "default": 60,
+        "description": "How often (in seconds) to check if new devices are available to connect to"
+      },
+      "preserveDisconnected": {
+        "title": "Preserve Disconnected Devices",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "description": "Enable this to have the plugin keep devices that are disconnected from their server. By default, devices that are not connected when their server is queried are removed from HomeKit, which may mess up your scenes if you have devices such as peripherals which are not always connected to your PC"
+      },
+      "suppressConnectionErrors": {
+        "title": "Suppress Connection Errors",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "description": "Enable this to hide log messages about errors connecting to your PC"
       }
     }
   }
