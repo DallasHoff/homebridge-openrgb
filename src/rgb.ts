@@ -1,14 +1,14 @@
-// A color (e.g. an RGB or HSV color made up of its 3 channel values)
+/** A color (e.g. an RGB or HSV color made up of its 3 channel values) */
 export type color = [number, number, number];
 
-// A color object as used by the OpenRGB SDK
+/** A color object as used by the OpenRGB SDK */
 export interface openRgbColor {
     red: number;
     green: number;
     blue: number;
 }
 
-// Describes a device as returned by the OpenRGB SDK
+/** Describes a device as returned by the OpenRGB SDK */
 export interface rgbDevice {
     deviceId: number;
     type: number;
@@ -30,7 +30,7 @@ export interface rgbDevice {
     [key: string]: any;
 }
 
-// Describes a device running the OpenRGB SDK server
+/** Describes a device running the OpenRGB SDK server */
 export interface rgbServer {
     name: string;
     host: string;

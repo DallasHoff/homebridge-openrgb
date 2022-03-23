@@ -28,10 +28,12 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
   ) {
     this.log.debug('Finished initializing platform:', this.config.name);
 
-    // When this event is fired it means Homebridge has restored all cached accessories from disk.
-    // Dynamic Platform plugins should only register new accessories after this event was fired,
-    // in order to ensure they weren't added to Homebridge already. This event can also be used
-    // to start discovery of new accessories.
+    /**
+     * When this event is fired it means Homebridge has restored all cached accessories from disk.
+     * Dynamic Platform plugins should only register new accessories after this event was fired,
+     * in order to ensure they weren't added to Homebridge already. This event can also be used
+     * to start discovery of new accessories.
+     */
     this.api.on('didFinishLaunching', async () => {
       log.debug('Executed didFinishLaunching callback');
 
@@ -192,9 +194,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
     }
   }
 
-  /**
-   * For generating a UUID for an RGB device from a globally unique but constant set of inputs
-   */
+  /** For generating a UUID for an RGB device from a globally unique but constant set of inputs */
   genUuid(device: rgbDevice): string {
     return this.api.hap.uuid.generate(`${device.name}-${device.serial}-${device.location}`);
   }

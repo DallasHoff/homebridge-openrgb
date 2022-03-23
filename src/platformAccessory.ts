@@ -78,6 +78,7 @@ export class OpenRgbPlatformAccessory {
    * If you need to return an error to show the device as "Not Responding" in the Home app:
    * throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
    */
+
   async getOn(): Promise<CharacteristicValue> {
     const ledsHsv = await this.getLedsHsv();
     const isOn = ledsHsv.reduce((a, b) => a + b) !== 0; // On unless all HSV values are 0
@@ -110,10 +111,12 @@ export class OpenRgbPlatformAccessory {
     return brightness;
   }
 
-  // Called to get the light color currently set on the device in HSV format.
-  // Since this can only return a single color, the function must get just the first LED's
-  // color and make the assumption that the others match it.
-  // If the computer/SDK server is off, the light will appear to be off, not unresponsive.
+  /**
+   * Called to get the light color currently set on the device in HSV format.
+   * Since this can only return a single color, the function must get just the first LED's
+   * color and make the assumption that the others match it.
+   * If the computer/SDK server is off, the light will appear to be off, not unresponsive.
+   */
   async getLedsHsv(): Promise<color> {
     let colorHsv: color = [0, 0, 0];
 
@@ -163,12 +166,14 @@ export class OpenRgbPlatformAccessory {
     this.platform.log.debug('Set Characteristic Brightness -> ', value);
   }
 
-  // Called to send the new light colors to the device when the accessory state is changed in a set handler.
-  // This sets all LED's on the device to the same color.
+  /**
+   * Called to send the new light colors to the device when the accessory state is changed in a set handler.
+   * This sets all LED's on the device to the same color.
+   */
   async updateLeds() {
     await new Promise(resolve => setTimeout(() => resolve(0), this.updateDelay));
 
-    const newColorHsv: color = this.states.On === false ? [0, 0, 0] : [
+    const newColorHsv: color = [
       this.states.Hue,
       this.states.Saturation,
       this.states.Brightness,
