@@ -4,6 +4,7 @@ import { OpenRgbPlatform } from './platform';
 
 import { color, openRgbColor } from './rgb';
 import * as ColorConvert from 'color-convert';
+import { findDeviceModeId } from './utils';
 
 /**
  * Platform Accessory
@@ -80,8 +81,7 @@ export class OpenRgbPlatformAccessory {
    */
 
   async getOn(): Promise<CharacteristicValue> {
-    const ledsHsv = await this.getLedsHsv();
-    const isOn = ledsHsv.reduce((a, b) => a + b) !== 0; // On unless all HSV values are 0
+    const isOn = await this.getLedsOn();
     this.states.On = isOn;
     this.platform.log.debug('Get Characteristic On ->', isOn);
     return isOn;
@@ -133,6 +133,28 @@ export class OpenRgbPlatformAccessory {
     return colorHsv;
   }
 
+  /** Called to get whether the light is on or not. */
+  async getLedsOn(): Promise<boolean> {
+    let isOn = false;
+
+    await this.platform.rgbConnection(this.accessory.context.server, (client, devices) => {
+      const device = devices.find(d => this.platform.genUuid(d) === this.accessory.UUID);
+      if (!device) {
+        return;
+      }
+      const ledColor: openRgbColor = device.colors[0];
+      const ledIsBlack = (ledColor.red + ledColor.green + ledColor.blue) === 0;
+      const deviceModeIsOff = findDeviceModeId(device, 'Off') === device.activeMode;
+      if (ledIsBlack || deviceModeIsOff) {
+        isOn = false;
+      } else {
+        isOn = true;
+      }
+    });
+
+    return isOn;
+  }
+
   /**
    * Handle "SET" requests from HomeKit
    * These are sent when the user changes the state of an accessory, for example, changing the Brightness
@@ -173,6 +195,7 @@ export class OpenRgbPlatformAccessory {
   async updateLeds() {
     await new Promise(resolve => setTimeout(() => resolve(0), this.updateDelay));
 
+    const isOn = this.states.On;
     const newColorHsv: color = [
       this.states.Hue,
       this.states.Saturation,
@@ -186,6 +209,9 @@ export class OpenRgbPlatformAccessory {
         return;
       }
 
+      const offModeId = findDeviceModeId(device, 'Off');
+      const directModeId = findDeviceModeId(device, 'Direct');
+
       const ledColor: openRgbColor = {
         red: newColorRgb[0],
         green: newColorRgb[1],
@@ -194,6 +220,11 @@ export class OpenRgbPlatformAccessory {
       const ledColors: openRgbColor[] = Array(device.colors.length).fill(ledColor);
 
       try {
+        if (isOn === true && directModeId !== undefined) {
+          await client.updateMode(device.deviceId, directModeId);
+        } else if (isOn === false && offModeId !== undefined) {
+          await client.updateMode(device.deviceId, offModeId);
+        }
         await client.updateLeds(device.deviceId, ledColors);
       } catch (err) {
         this.platform.log.warn(`Failed to set light color on device: ${device.name}`);
