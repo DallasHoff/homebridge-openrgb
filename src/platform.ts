@@ -5,6 +5,7 @@ import { OpenRgbPlatformAccessory } from './platformAccessory';
 
 import { rgbServer, rgbDevice } from './rgb';
 import { Client as OpenRGB } from 'openrgb-sdk';
+import { findDeviceModeId } from './utils';
 
 /**
  * HomebridgePlatform
@@ -131,6 +132,9 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         // update the accessory.context
         existingAccessory.context.device = device;
         existingAccessory.context.server = deviceServer;
+        if (device.activeMode !== findDeviceModeId(device, 'Off')) {
+          existingAccessory.context.lastPoweredModeId = device.activeMode;
+        }
         this.api.updatePlatformAccessories([existingAccessory]);
 
         // create the accessory handler for the restored accessory if it does not have one yet
@@ -150,6 +154,9 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         // the `context` property can be used to store any data about the accessory
         accessory.context.device = device;
         accessory.context.server = deviceServer;
+        if (device.activeMode !== findDeviceModeId(device, 'Off')) {
+          accessory.context.lastPoweredModeId = device.activeMode;
+        }
 
         // create the accessory handler for the newly created accessory
         // this class is imported from `platformAccessory.ts`
