@@ -36,3 +36,11 @@ export interface rgbServer {
     host: string;
     port: number;
 }
+
+/** Context information stored for accessories */
+export interface rgbDeviceContext {
+    device: rgbDevice;
+    server: rgbServer;
+    lastPoweredRgbColor?: color;
+    lastPoweredModeId?: number;
+}

@@ -9,3 +9,7 @@ export const DEFAULT_DISCOVERY_INTERVAL = 60;
 
 /** Timeout (in milliseconds) to use when attempting to connect to a server */
 export const SERVER_CONNECTION_TIMEOUT = 3000;
+
+/** Send updates after this delay (milliseconds) to mitigate race condition from
+ * HomeKit setting multiple characteristics at the same time */
+export const CHARACTERISTIC_UPDATE_DELAY = 50;

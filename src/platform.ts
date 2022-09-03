@@ -3,9 +3,9 @@ import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, 
 import { PLATFORM_NAME, PLUGIN_NAME, DEFAULT_DISCOVERY_INTERVAL, SERVER_CONNECTION_TIMEOUT } from './settings';
 import { OpenRgbPlatformAccessory } from './platformAccessory';
 
-import { rgbServer, rgbDevice } from './rgb';
+import { rgbServer, rgbDevice, rgbDeviceContext } from './rgb';
 import { Client as OpenRGB } from 'openrgb-sdk';
-import { findDeviceModeId } from './utils';
+import { findDeviceLedRgbColor, findDeviceModeId, isLedOff } from './utils';
 
 /**
  * HomebridgePlatform
@@ -17,7 +17,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
 
   // this is used to track restored cached accessories
-  public accessories: PlatformAccessory[] = [];
+  public accessories: PlatformAccessory<rgbDeviceContext>[] = [];
 
   // track which accessories have registered handlers
   public handlerUuids: string[] = [];
@@ -77,7 +77,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
    * This function is invoked when Homebridge restores cached accessories from disk at startup.
    * It should be used to setup event handlers for characteristics and update respective values.
    */
-  configureAccessory(accessory: PlatformAccessory) {
+  configureAccessory(accessory: PlatformAccessory<rgbDeviceContext>) {
     this.log.info('Loading accessory from cache:', accessory.displayName);
 
     // add the restored accessory to the accessories cache so we can track if it has already been registered
@@ -130,8 +130,12 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         this.log.debug('Restoring existing accessory from cache:', existingAccessory.displayName);
 
         // update the accessory.context
+        const colorRgb = findDeviceLedRgbColor(device);
         existingAccessory.context.device = device;
         existingAccessory.context.server = deviceServer;
+        if (!isLedOff(colorRgb)) {
+          existingAccessory.context.lastPoweredRgbColor = colorRgb;
+        }
         if (device.activeMode !== findDeviceModeId(device, 'Off')) {
           existingAccessory.context.lastPoweredModeId = device.activeMode;
         }
@@ -148,12 +152,16 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         this.log.info('Adding new accessory:', device.name);
 
         // create a new accessory
-        const accessory = new this.api.platformAccessory(device.name, uuid);
+        const accessory = new this.api.platformAccessory<rgbDeviceContext>(device.name, uuid);
         this.accessories.push(accessory);
 
         // the `context` property can be used to store any data about the accessory
+        const colorRgb = findDeviceLedRgbColor(device);
         accessory.context.device = device;
         accessory.context.server = deviceServer;
+        if (!isLedOff(colorRgb)) {
+          accessory.context.lastPoweredRgbColor = colorRgb;
+        }
         if (device.activeMode !== findDeviceModeId(device, 'Off')) {
           accessory.context.lastPoweredModeId = device.activeMode;
         }
