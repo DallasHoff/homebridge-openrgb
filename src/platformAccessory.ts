@@ -4,7 +4,7 @@ import { OpenRgbPlatform } from './platform';
 
 import { color, openRgbColor, rgbDeviceContext } from './rgb';
 import * as ColorConvert from 'color-convert';
-import { findDeviceLedRgbColor, findDeviceModeId, isLedOff } from './utils';
+import { getDeviceLedRgbColor, findDeviceModeId, isLedOff, createDeviceLedConfig } from './utils';
 import { CHARACTERISTIC_UPDATE_DELAY } from './settings';
 
 /**
@@ -84,7 +84,7 @@ export class OpenRgbPlatformAccessory {
   async getOn(): Promise<CharacteristicValue> {
     const isOn = await this.getLedsOn();
     this.states.On = isOn;
-    this.platform.log.debug('Get Characteristic On ->', isOn);
+    this.platform.log.debug(`Get Characteristic On -> ${isOn} (${this.accessory.context.device.name})`);
     return isOn;
   }
 
@@ -92,7 +92,7 @@ export class OpenRgbPlatformAccessory {
     const ledsHsv = await this.getLedsHsv();
     const hue = ledsHsv[0];
     this.states.Hue = hue;
-    this.platform.log.debug('Get Characteristic Hue ->', hue);
+    this.platform.log.debug(`Get Characteristic Hue -> ${hue} (${this.accessory.context.device.name})`);
     return hue;
   }
 
@@ -100,7 +100,7 @@ export class OpenRgbPlatformAccessory {
     const ledsHsv = await this.getLedsHsv();
     const saturation = ledsHsv[1];
     this.states.Saturation = saturation;
-    this.platform.log.debug('Get Characteristic Saturation ->', saturation);
+    this.platform.log.debug(`Get Characteristic Saturation -> ${saturation} (${this.accessory.context.device.name})`);
     return saturation;
   }
 
@@ -108,7 +108,7 @@ export class OpenRgbPlatformAccessory {
     const ledsHsv = await this.getLedsHsv();
     const brightness = ledsHsv[2];
     this.states.Brightness = brightness;
-    this.platform.log.debug('Get Characteristic Brightness ->', brightness);
+    this.platform.log.debug(`Get Characteristic Brightness -> ${brightness} (${this.accessory.context.device.name})`);
     return brightness;
   }
 
@@ -128,7 +128,7 @@ export class OpenRgbPlatformAccessory {
       }
 
       // Get light color
-      const colorRgb = findDeviceLedRgbColor(device);
+      const colorRgb = getDeviceLedRgbColor(device);
       colorHsv = ColorConvert.rgb.hsv(...colorRgb);
 
       // Update last powered color context value
@@ -176,25 +176,25 @@ export class OpenRgbPlatformAccessory {
     const togglingPower = this.states.On !== value as boolean;
     this.states.On = value as boolean;
     await this.updateLeds(togglingPower);
-    this.platform.log.debug('Set Characteristic On ->', value);
+    this.platform.log.debug(`Set Characteristic On -> ${value} (${this.accessory.context.device.name})`);
   }
 
   async setHue(value: CharacteristicValue) {
     this.states.Hue = value as number;
     await this.updateLeds();
-    this.platform.log.debug('Set Characteristic Hue -> ', value);
+    this.platform.log.debug(`Set Characteristic Hue -> ${value} (${this.accessory.context.device.name})`);
   }
 
   async setSaturation(value: CharacteristicValue) {
     this.states.Saturation = value as number;
     await this.updateLeds();
-    this.platform.log.debug('Set Characteristic Saturation -> ', value);
+    this.platform.log.debug(`Set Characteristic Saturation -> ${value} (${this.accessory.context.device.name})`);
   }
 
   async setBrightness(value: CharacteristicValue) {
     this.states.Brightness = value as number;
     await this.updateLeds();
-    this.platform.log.debug('Set Characteristic Brightness -> ', value);
+    this.platform.log.debug(`Set Characteristic Brightness -> ${value} (${this.accessory.context.device.name})`);
   }
 
   /**
@@ -216,12 +216,7 @@ export class OpenRgbPlatformAccessory {
       }
 
       // Light color to set
-      const newLedColor: openRgbColor = {
-        red: newColorRgb[0],
-        green: newColorRgb[1],
-        blue: newColorRgb[2],
-      };
-      const newLedColors: openRgbColor[] = Array(device.colors.length).fill(newLedColor);
+      const newLedColors: openRgbColor[] = createDeviceLedConfig(newColorRgb, device);
 
       // Mode info
       const offModeId: number | undefined = findDeviceModeId(device, 'Off');

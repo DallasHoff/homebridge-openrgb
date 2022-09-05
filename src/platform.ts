@@ -5,7 +5,7 @@ import { OpenRgbPlatformAccessory } from './platformAccessory';
 
 import { rgbServer, rgbDevice, rgbDeviceContext } from './rgb';
 import { Client as OpenRGB } from 'openrgb-sdk';
-import { findDeviceLedRgbColor, findDeviceModeId, isLedOff } from './utils';
+import { getDeviceLedRgbColor, findDeviceModeId, isLedOff } from './utils';
 
 /**
  * HomebridgePlatform
@@ -130,7 +130,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         this.log.debug('Restoring existing accessory from cache:', existingAccessory.displayName);
 
         // update the accessory.context
-        const colorRgb = findDeviceLedRgbColor(device);
+        const colorRgb = getDeviceLedRgbColor(device);
         existingAccessory.context.device = device;
         existingAccessory.context.server = deviceServer;
         if (!isLedOff(colorRgb)) {
@@ -156,7 +156,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         this.accessories.push(accessory);
 
         // the `context` property can be used to store any data about the accessory
-        const colorRgb = findDeviceLedRgbColor(device);
+        const colorRgb = getDeviceLedRgbColor(device);
         accessory.context.device = device;
         accessory.context.server = deviceServer;
         if (!isLedOff(colorRgb)) {
