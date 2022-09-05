@@ -1,15 +1,15 @@
 /** A color (e.g. an RGB or HSV color made up of its 3 channel values) */
-export type color = [number, number, number];
+export type Color = [number, number, number];
 
 /** A color object as used by the OpenRGB SDK */
-export interface openRgbColor {
+export interface OpenRgbColor {
     red: number;
     green: number;
     blue: number;
 }
 
 /** Describes a device as returned by the OpenRGB SDK */
-export interface rgbDevice {
+export interface RgbDevice {
     deviceId: number;
     type: number;
     name: string;
@@ -21,24 +21,24 @@ export interface rgbDevice {
     leds: [
         {
             name: string;
-            value: openRgbColor;
+            value: OpenRgbColor;
         }
     ];
-    colors: openRgbColor[];
+    colors: OpenRgbColor[];
     modes?: any[];
     zones?: any[];
     [key: string]: any;
 }
 
 /** Describes a device running the OpenRGB SDK server */
-export interface rgbServer {
+export interface RgbServer {
     name: string;
     host: string;
     port: number;
 }
 
 /** State information that HomeKit keeps for accessories */
-export interface rgbDeviceStates {
+export interface RgbDeviceStates {
     On: boolean;
     Hue: number;
     Saturation: number;
@@ -46,9 +46,9 @@ export interface rgbDeviceStates {
 }
 
 /** Context information stored for accessories */
-export interface rgbDeviceContext {
-    device: rgbDevice;
-    server: rgbServer;
-    lastPoweredRgbColor?: color;
+export interface RgbDeviceContext {
+    device: RgbDevice;
+    server: RgbServer;
+    lastPoweredRgbColor?: Color;
     lastPoweredModeId?: number;
 }

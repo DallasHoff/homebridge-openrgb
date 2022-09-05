@@ -2,7 +2,7 @@ import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
 import { OpenRgbPlatform } from './platform';
 
-import { color, openRgbColor, rgbDeviceContext, rgbDeviceStates } from './rgb';
+import { Color, OpenRgbColor, RgbDeviceContext, RgbDeviceStates } from './rgb';
 import * as ColorConvert from 'color-convert';
 import { getDeviceLedRgbColor, findDeviceModeId, isLedOff, createDeviceLedConfig, getStateHsvColor } from './utils';
 import { CHARACTERISTIC_UPDATE_DELAY } from './settings';
@@ -15,7 +15,7 @@ import { CHARACTERISTIC_UPDATE_DELAY } from './settings';
 export class OpenRgbPlatformAccessory {
   private service: Service;
 
-  private states: rgbDeviceStates = {
+  private states: RgbDeviceStates = {
     On: false,
     Hue: 0,
     Saturation: 0,
@@ -24,7 +24,7 @@ export class OpenRgbPlatformAccessory {
 
   constructor(
     private readonly platform: OpenRgbPlatform,
-    private readonly accessory: PlatformAccessory<rgbDeviceContext>,
+    private readonly accessory: PlatformAccessory<RgbDeviceContext>,
   ) {
 
     // set accessory information
@@ -118,8 +118,8 @@ export class OpenRgbPlatformAccessory {
    * color and make the assumption that the others match it.
    * If the computer/SDK server is off, the light will appear to be off, not unresponsive.
    */
-  async getLedsHsv(): Promise<color> {
-    let colorHsv: color = [0, 0, 0];
+  async getLedsHsv(): Promise<Color> {
+    let colorHsv: Color = [0, 0, 0];
 
     await this.platform.rgbConnection(this.accessory.context.server, (client, devices) => {
       const device = devices.find(d => this.platform.genUuid(d) === this.accessory.UUID);
@@ -158,7 +158,7 @@ export class OpenRgbPlatformAccessory {
       if (!device) {
         return;
       }
-      const ledColor: openRgbColor = device.colors[0];
+      const ledColor: OpenRgbColor = device.colors[0];
       const ledIsBlack = (ledColor.red + ledColor.green + ledColor.blue) === 0;
       const deviceModeIsOff = findDeviceModeId(device, 'Off') === device.activeMode;
       if (ledIsBlack || deviceModeIsOff) {
@@ -210,8 +210,8 @@ export class OpenRgbPlatformAccessory {
 
     // New state info
     const isOn: boolean = this.states.On;
-    const newColorHsv: color = getStateHsvColor(this.states);
-    let newColorRgb: color = ColorConvert.hsv.rgb(newColorHsv);
+    const newColorHsv: Color = getStateHsvColor(this.states);
+    let newColorRgb: Color = ColorConvert.hsv.rgb(newColorHsv);
     let newMode: number | undefined = undefined;
 
     await this.platform.rgbConnection(this.accessory.context.server, async (client, devices) => {
@@ -261,7 +261,7 @@ export class OpenRgbPlatformAccessory {
           }
         }
         // Set light colors
-        const newLedColors: openRgbColor[] = createDeviceLedConfig(newColorRgb, device);
+        const newLedColors: OpenRgbColor[] = createDeviceLedConfig(newColorRgb, device);
         await client.updateLeds(device.deviceId, newLedColors);
         if (!isLedOff(newColorRgb)) {
           this.accessory.context.lastPoweredRgbColor = newColorRgb;

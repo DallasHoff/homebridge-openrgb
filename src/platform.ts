@@ -3,7 +3,7 @@ import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, 
 import { PLATFORM_NAME, PLUGIN_NAME, DEFAULT_DISCOVERY_INTERVAL, SERVER_CONNECTION_TIMEOUT } from './settings';
 import { OpenRgbPlatformAccessory } from './platformAccessory';
 
-import { rgbServer, rgbDevice, rgbDeviceContext } from './rgb';
+import { RgbServer, RgbDevice, RgbDeviceContext } from './rgb';
 import { Client as OpenRGB } from 'openrgb-sdk';
 import { getDeviceLedRgbColor, findDeviceModeId, isLedOff } from './utils';
 
@@ -17,7 +17,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
 
   // this is used to track restored cached accessories
-  public accessories: PlatformAccessory<rgbDeviceContext>[] = [];
+  public accessories: PlatformAccessory<RgbDeviceContext>[] = [];
 
   // track which accessories have registered handlers
   public handlerUuids: string[] = [];
@@ -77,7 +77,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
    * This function is invoked when Homebridge restores cached accessories from disk at startup.
    * It should be used to setup event handlers for characteristics and update respective values.
    */
-  configureAccessory(accessory: PlatformAccessory<rgbDeviceContext>) {
+  configureAccessory(accessory: PlatformAccessory<RgbDeviceContext>) {
     this.log.info('Loading accessory from cache:', accessory.displayName);
 
     // add the restored accessory to the accessories cache so we can track if it has already been registered
@@ -91,11 +91,11 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
    */
   async discoverDevices() {
     // OpenRGB SDK servers listed in config
-    const servers: rgbServer[] = this.config.servers;
+    const servers: RgbServer[] = this.config.servers;
     // servers that connected successfully; use index to match to a found device
-    const foundServers: rgbServer[] = [];
+    const foundServers: RgbServer[] = [];
     // RGB devices reported by found servers
-    const foundDevices: rgbDevice[] = [];
+    const foundDevices: RgbDevice[] = [];
     // UUID's of found devices
     const foundUuids: string[] = [];
 
@@ -115,7 +115,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
     this.log.debug('Registering devices');
     foundDevices.forEach((device, deviceIndex) => {
       // server this device belongs to
-      const deviceServer: rgbServer = foundServers[deviceIndex];
+      const deviceServer: RgbServer = foundServers[deviceIndex];
 
       // unique ID for the device
       const uuid = this.genUuid(device);
@@ -152,7 +152,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         this.log.info('Adding new accessory:', device.name);
 
         // create a new accessory
-        const accessory = new this.api.platformAccessory<rgbDeviceContext>(device.name, uuid);
+        const accessory = new this.api.platformAccessory<RgbDeviceContext>(device.name, uuid);
         this.accessories.push(accessory);
 
         // the `context` property can be used to store any data about the accessory
@@ -182,10 +182,10 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
     // (unless preserveDisconnected option is set)
     // or if the devices belong to a server that is no longer in the config
     this.accessories = this.accessories.filter(accessory => {
-      const accServer: rgbServer = accessory.context.server;
+      const accServer: RgbServer = accessory.context.server;
       const accUuid: string = accessory.UUID;
 
-      const serverMatch = (server: rgbServer) => (
+      const serverMatch = (server: RgbServer) => (
         server.name === accServer.name &&
         server.host === accServer.host &&
         server.port === accServer.port
@@ -210,7 +210,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
   }
 
   /** For generating a UUID for an RGB device from a globally unique but constant set of inputs */
-  genUuid(device: rgbDevice): string {
+  genUuid(device: RgbDevice): string {
     return this.api.hap.uuid.generate(`${device.name}-${device.serial}-${device.location}`);
   }
 
@@ -220,8 +220,8 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
    * client (the connection object) and devices (array of RGB device info)
    */
   async rgbConnection(
-    server: rgbServer,
-    action: (client: any, devices: rgbDevice[]) => void | Promise<void>,
+    server: RgbServer,
+    action: (client: any, devices: RgbDevice[]) => void | Promise<void>,
   ): Promise<number> {
     const { name: serverName, host: serverHost, port: serverPort } = server;
     const client = new OpenRGB(serverName, serverPort, serverHost);
@@ -238,7 +238,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
     }
 
     // Build array of device information
-    const devices: rgbDevice[] = [];
+    const devices: RgbDevice[] = [];
     let controllerCount = 0;
 
     try {
@@ -249,7 +249,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
 
     for (let deviceId = 0; deviceId < controllerCount; deviceId++) {
       try {
-        const device: rgbDevice = await client.getControllerData(deviceId);
+        const device: RgbDevice = await client.getControllerData(deviceId);
         devices.push(device);
       } catch (err) {
         this.log.warn(`Unable to get status of RGB device ${deviceId} on OpenRGB SDK server at ${serverHost}:${serverPort}`);
