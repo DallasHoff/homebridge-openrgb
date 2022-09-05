@@ -37,6 +37,14 @@ export interface rgbServer {
     port: number;
 }
 
+/** State information that HomeKit keeps for accessories */
+export interface rgbDeviceStates {
+    On: boolean;
+    Hue: number;
+    Saturation: number;
+    Brightness: number;
+}
+
 /** Context information stored for accessories */
 export interface rgbDeviceContext {
     device: rgbDevice;

@@ -1,10 +1,15 @@
-import { color, openRgbColor, rgbDevice } from './rgb';
+import { color, openRgbColor, rgbDevice, rgbDeviceStates } from './rgb';
 
 /** Gets the RGB color that is set on the provided device */
 export function getDeviceLedRgbColor(device: rgbDevice): color {
   const ledColor: openRgbColor = device.colors[0];
   const ledRgb: color = [ledColor.red, ledColor.green, ledColor.blue];
   return ledRgb;
+}
+
+/** Gets the HSV color that is currently represented by an accessory's state */
+export function getStateHsvColor(states: rgbDeviceStates): color {
+  return [states.Hue, states.Saturation, states.Brightness];
 }
 
 /** Determines whether the provided color is black */

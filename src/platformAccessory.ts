@@ -2,9 +2,9 @@ import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
 import { OpenRgbPlatform } from './platform';
 
-import { color, openRgbColor, rgbDeviceContext } from './rgb';
+import { color, openRgbColor, rgbDeviceContext, rgbDeviceStates } from './rgb';
 import * as ColorConvert from 'color-convert';
-import { getDeviceLedRgbColor, findDeviceModeId, isLedOff, createDeviceLedConfig } from './utils';
+import { getDeviceLedRgbColor, findDeviceModeId, isLedOff, createDeviceLedConfig, getStateHsvColor } from './utils';
 import { CHARACTERISTIC_UPDATE_DELAY } from './settings';
 
 /**
@@ -15,7 +15,7 @@ import { CHARACTERISTIC_UPDATE_DELAY } from './settings';
 export class OpenRgbPlatformAccessory {
   private service: Service;
 
-  private states = {
+  private states: rgbDeviceStates = {
     On: false,
     Hue: 0,
     Saturation: 0,
@@ -131,8 +131,12 @@ export class OpenRgbPlatformAccessory {
       const colorRgb = getDeviceLedRgbColor(device);
       colorHsv = ColorConvert.rgb.hsv(...colorRgb);
 
-      // Update last powered color context value
-      if (!isLedOff(colorRgb)) {
+      // Check if lights are off
+      if (isLedOff(colorRgb)) {
+        // Lights off: return the previous state to preserve the set color
+        colorHsv = getStateHsvColor(this.states);
+      } else {
+        // Lights on: update last powered color context value
         this.accessory.context.lastPoweredRgbColor = colorRgb;
       }
 
@@ -205,9 +209,10 @@ export class OpenRgbPlatformAccessory {
     await new Promise(resolve => setTimeout(() => resolve(0), CHARACTERISTIC_UPDATE_DELAY));
 
     // New state info
-    const isOn = this.states.On;
-    const { Hue, Saturation, Brightness } = this.states;
-    const newColorRgb: color = ColorConvert.hsv.rgb([Hue, Saturation, Brightness]);
+    const isOn: boolean = this.states.On;
+    const newColorHsv: color = getStateHsvColor(this.states);
+    let newColorRgb: color = ColorConvert.hsv.rgb(newColorHsv);
+    let newMode: number | undefined = undefined;
 
     await this.platform.rgbConnection(this.accessory.context.server, async (client, devices) => {
       const device = devices.find(d => this.platform.genUuid(d) === this.accessory.UUID);
@@ -215,39 +220,52 @@ export class OpenRgbPlatformAccessory {
         return;
       }
 
-      // Light color to set
-      const newLedColors: openRgbColor[] = createDeviceLedConfig(newColorRgb, device);
+      const offModeId = findDeviceModeId(device, 'Off');
+      const directModeId = findDeviceModeId(device, 'Direct');
+      const { lastPoweredModeId, lastPoweredRgbColor } = this.accessory.context;
 
-      // Mode info
-      const offModeId: number | undefined = findDeviceModeId(device, 'Off');
-      const directModeId: number | undefined = findDeviceModeId(device, 'Direct');
-      const { lastPoweredModeId } = this.accessory.context;
+      // Set light mode?
+      if (togglingPower === true) {
+        // Turning on or off
+        if (isOn === true) {
+          // Turning on
+          if (lastPoweredModeId !== undefined) {
+            // Last mode known: restore it
+            newMode = lastPoweredModeId;
+          } else if (directModeId !== undefined) {
+            // Last mode unknown: set to direct mode
+            newMode = directModeId;
+          }
+          if (lastPoweredRgbColor !== undefined) {
+            // Last color known: set it again
+            newColorRgb = lastPoweredRgbColor;
+          }
+        } else {
+          // Turning off: set mode to Off and set color to black
+          if (offModeId !== undefined) {
+            newMode = offModeId;
+          }
+          newColorRgb = [0, 0, 0];
+        }
+      } else if (directModeId !== undefined) {
+        // Changing light color: set mode to Direct
+        newMode = directModeId;
+      }
 
       try {
-        // Set light mode?
-        if (togglingPower === true) {
-          // Turning on or off
-          if (isOn === true) {
-            // Turning on
-            if (lastPoweredModeId !== undefined) {
-              // Last mode known: restore it
-              await client.updateMode(device.deviceId, lastPoweredModeId);
-            } else if (directModeId !== undefined) {
-              // Last mode unknown: set to direct mode
-              await client.updateMode(device.deviceId, directModeId);
-              this.accessory.context.lastPoweredModeId = directModeId;
-            }
-          } else if (isOn === false && offModeId !== undefined) {
-            // Turning off: set mode to Off
-            await client.updateMode(device.deviceId, offModeId);
+        // Set mode
+        if (newMode !== undefined) {
+          await client.updateMode(device.deviceId, newMode);
+          if (newMode !== offModeId) {
+            this.accessory.context.lastPoweredModeId = newMode;
           }
-        } else if (directModeId !== undefined) {
-          // Changing light color: set mode to Direct
-          await client.updateMode(device.deviceId, directModeId);
-          this.accessory.context.lastPoweredModeId = directModeId;
         }
         // Set light colors
+        const newLedColors: openRgbColor[] = createDeviceLedConfig(newColorRgb, device);
         await client.updateLeds(device.deviceId, newLedColors);
+        if (!isLedOff(newColorRgb)) {
+          this.accessory.context.lastPoweredRgbColor = newColorRgb;
+        }
       } catch (err) {
         this.platform.log.warn(`Failed to set light color on device: ${device.name}`);
       }
