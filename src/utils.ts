@@ -2,8 +2,12 @@ import { Color, OpenRgbColor, RgbDevice, RgbDeviceStates } from './rgb';
 
 /** Gets the RGB color that is set on the provided device */
 export function getDeviceLedRgbColor(device: RgbDevice): Color {
-  const ledColor: OpenRgbColor = device.colors[0];
-  const ledRgb: Color = [ledColor.red, ledColor.green, ledColor.blue];
+  const ledColor: OpenRgbColor = device?.colors?.[0];
+  const ledRgb: Color = [
+    ledColor?.red ?? 0,
+    ledColor?.green ?? 0,
+    ledColor?.blue ?? 0,
+  ];
   return ledRgb;
 }
 
