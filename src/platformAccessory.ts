@@ -5,7 +5,7 @@ import { OpenRgbPlatform } from './platform';
 import { Color, OpenRgbColor, RgbDeviceContext, RgbDeviceStates } from './rgb';
 import * as ColorConvert from 'color-convert';
 import { getDeviceLedRgbColor, findDeviceModeId, isLedOff, createDeviceLedConfig, getStateHsvColor } from './utils';
-import { CHARACTERISTIC_UPDATE_DELAY } from './settings';
+import { CHARACTERISTIC_UPDATE_DELAY, DEFAULT_DEVICE_NAME } from './settings';
 
 /**
  * Platform Accessory
@@ -30,14 +30,14 @@ export class OpenRgbPlatformAccessory {
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, accessory.context.device?.description?.split?.(' ')?.[0] || 'OpenRGB')
-      .setCharacteristic(this.platform.Characteristic.Model, accessory.context.device.name || 'RGB Device')
+      .setCharacteristic(this.platform.Characteristic.Model, accessory.context.device.name || DEFAULT_DEVICE_NAME)
       .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.context.device.serial || '9876543210');
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb);
 
     // set the service name, this is what is displayed as the default name on the Home app
-    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name || 'RGB Device');
+    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name || DEFAULT_DEVICE_NAME);
 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb

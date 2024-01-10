@@ -1,6 +1,6 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
-import { PLATFORM_NAME, PLUGIN_NAME, DEFAULT_DISCOVERY_INTERVAL, SERVER_CONNECTION_TIMEOUT } from './settings';
+import { PLATFORM_NAME, PLUGIN_NAME, DEFAULT_DISCOVERY_INTERVAL, SERVER_CONNECTION_TIMEOUT, DEFAULT_DEVICE_NAME } from './settings';
 import { OpenRgbPlatformAccessory } from './platformAccessory';
 
 import { RgbServer, RgbDevice, RgbDeviceContext } from './rgb';
@@ -152,7 +152,7 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         this.log.info('Adding new accessory:', device.name);
 
         // create a new accessory
-        const accessory = new this.api.platformAccessory<RgbDeviceContext>(device.name, uuid);
+        const accessory = new this.api.platformAccessory<RgbDeviceContext>(device.name || DEFAULT_DEVICE_NAME, uuid);
         this.accessories.push(accessory);
 
         // the `context` property can be used to store any data about the accessory
