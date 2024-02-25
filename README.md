@@ -5,9 +5,9 @@
 
 ![](https://repository-images.githubusercontent.com/381840795/6d85ba00-dc10-11eb-8bac-32f841dd423b)
 
-This plugin allows you to integrate [Homebridge](https://homebridge.io/) with the [OpenRGB](https://gitlab.com/CalcProgrammer1/OpenRGB/-/wikis/home) lighting control software on your PC so that you can control the lighting of your PC's components and peripherals with HomeKit. Each RGB device is added to HomeKit as an RGB lightbulb that you can control with Siri, the Home app, scenes, automations, or however else you interact with your HomeKit smart home.
+This plugin allows you to integrate [Homebridge](https://homebridge.io/) with the [OpenRGB](https://openrgb.org/index.html) lighting control software on your PC so that you can control the lighting of your PC's components and peripherals with HomeKit. Each RGB device is added to HomeKit as an RGB lightbulb that you can control with Siri, the Home app, scenes, automations, or however else you interact with your HomeKit smart home.
 
-This solution works with PC hardware from the most popular brands like ASUS, Gigabyte, MSI, Corsair, Razer, Logitech, NZXT, and [many more](https://gitlab.com/CalcProgrammer1/OpenRGB/-/wikis/Supported-Devices).
+This solution works with PC hardware from the most popular brands like ASUS, Gigabyte, MSI, Corsair, Razer, Logitech, NZXT, and [many more](https://openrgb.org/devices.html).
 
 # Installation
 
@@ -15,7 +15,7 @@ This solution works with PC hardware from the most popular brands like ASUS, Gig
 
 OpenRGB is a software project that aims to replace the need to use several different RGB lighting control software programs from multiple vendors, allowing you to control all of your PC components' and peripherals' lighting with just one piece of software.
 
-Follow [OpenRGB's instructions for installing the software](https://gitlab.com/CalcProgrammer1/OpenRGB/-/wikis/OpenRGB-Windows-Setup-and-Usage) on your PC. Then, follow [these instructions](https://gitlab.com/CalcProgrammer1/OpenRGB/-/wikis/Frequently-Asked-Questions#can-i-have-openrgb-start-automatically-when-i-log-in) to configure OpenRGB to start automatically when you turn on your PC. Be sure to make use of the `--server` flag so that the OpenRGB SDK server starts on boot too. This plugin interacts with your PC's lighting through that server.
+Follow [OpenRGB's instructions for installing the software](https://gitlab.com/OpenRGBDevelopers/OpenRGB-Wiki/-/blob/stable/User-Documentation/OpenRGB-Windows-Setup-and-Usage.md) on your PC. Then, follow [these instructions](https://gitlab.com/OpenRGBDevelopers/OpenRGB-Wiki/-/blob/stable/User-Documentation/Frequently-Asked-Questions.md#can-i-have-openrgb-start-automatically-when-i-log-in) to configure OpenRGB to start automatically when you turn on your PC. Be sure to make use of the `--server` flag so that the OpenRGB SDK server starts on boot too. This plugin interacts with your PC's lighting through that server.
 
 ## Install this Plugin on Homebridge
 
