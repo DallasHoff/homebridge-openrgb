@@ -135,14 +135,10 @@ export class OpenRgbPlatformAccessory {
       if (isLedOff(colorRgb)) {
         // Lights off: return the previous state to preserve the set color
         colorHsv = getStateHsvColor(this.states);
-      } else {
-        // Lights on: update last powered color context value
-        this.accessory.context.lastPoweredRgbColor = colorRgb;
-      }
-
-      // Update last powered mode context value
-      if (device.activeMode !== findDeviceModeId(device, 'Off')) {
+      } else if (device.activeMode !== findDeviceModeId(device, 'Off')) {
+        // Lights on: update power state context values
         this.accessory.context.lastPoweredModeId = device.activeMode;
+        this.accessory.context.lastPoweredRgbColor = colorRgb;
       }
     });
 
@@ -241,10 +237,15 @@ export class OpenRgbPlatformAccessory {
             newColorRgb = lastPoweredRgbColor;
           }
         } else {
-          // Turning off: set mode to Off and set color to black
+          // Turning off
           if (offModeId !== undefined) {
+            // Set mode to off
             newMode = offModeId;
+          } else if (directModeId !== undefined) {
+            // Set mode to direct if there is no off mode
+            newMode = directModeId;
           }
+          // Set color to black
           newColorRgb = [0, 0, 0];
         }
       } else if (directModeId !== undefined) {
@@ -256,14 +257,13 @@ export class OpenRgbPlatformAccessory {
         // Set mode
         if (newMode !== undefined) {
           await client.updateMode(device.deviceId, newMode);
-          if (newMode !== offModeId) {
-            this.accessory.context.lastPoweredModeId = newMode;
-          }
         }
         // Set light colors
         const newLedColors: OpenRgbColor[] = createDeviceLedConfig(newColorRgb, device);
         await client.updateLeds(device.deviceId, newLedColors);
-        if (!isLedOff(newColorRgb)) {
+        // Update power state context values
+        if (!isLedOff(newColorRgb) && newMode !== offModeId) {
+          this.accessory.context.lastPoweredModeId = newMode;
           this.accessory.context.lastPoweredRgbColor = newColorRgb;
         }
       } catch (err) {

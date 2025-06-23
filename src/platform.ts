@@ -133,11 +133,9 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         const colorRgb = getDeviceLedRgbColor(device);
         existingAccessory.context.device = device;
         existingAccessory.context.server = deviceServer;
-        if (!isLedOff(colorRgb)) {
-          existingAccessory.context.lastPoweredRgbColor = colorRgb;
-        }
-        if (device.activeMode !== findDeviceModeId(device, 'Off')) {
+        if (!isLedOff(colorRgb) && device.activeMode !== findDeviceModeId(device, 'Off')) {
           existingAccessory.context.lastPoweredModeId = device.activeMode;
+          existingAccessory.context.lastPoweredRgbColor = colorRgb;
         }
         this.api.updatePlatformAccessories([existingAccessory]);
 
@@ -159,11 +157,9 @@ export class OpenRgbPlatform implements DynamicPlatformPlugin {
         const colorRgb = getDeviceLedRgbColor(device);
         accessory.context.device = device;
         accessory.context.server = deviceServer;
-        if (!isLedOff(colorRgb)) {
-          accessory.context.lastPoweredRgbColor = colorRgb;
-        }
-        if (device.activeMode !== findDeviceModeId(device, 'Off')) {
+        if (!isLedOff(colorRgb) && device.activeMode !== findDeviceModeId(device, 'Off')) {
           accessory.context.lastPoweredModeId = device.activeMode;
+          accessory.context.lastPoweredRgbColor = colorRgb;
         }
 
         // create the accessory handler for the newly created accessory
